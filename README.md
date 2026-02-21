@@ -68,6 +68,25 @@ if pop_bootstrap.data.get("valid"):
     )
 ```
 
+## Dashboard API usage
+
+```python
+from nebulauth_sdk import NebulAuthDashboardClient
+
+dashboard = NebulAuthDashboardClient(
+    auth={"mode": "bearer", "bearer_token": "mk_at_..."},
+)
+
+me = dashboard.me()
+users = dashboard.list_users()
+
+session_users = dashboard.list_users(
+    {
+        "auth": {"mode": "session", "session_cookie": "session-cookie-value"}
+    }
+)
+```
+
 ## Notes
 
 - Canonical signing string matches your bot implementation:
@@ -98,4 +117,15 @@ NEBULAUTH_TEST_KEY=mk_live_... \
 python -m unittest tests.test_live_client -v
 ```
 
-Optional: `NEBULAUTH_BASE_URL=...`, `NEBULAUTH_TEST_HWID=...`
+Live test env vars:
+
+- Required to enable live tests:
+    - `NEBULAUTH_LIVE_TEST=1`
+- Required for runtime live tests:
+    - `NEBULAUTH_BEARER_TOKEN`
+    - `NEBULAUTH_SIGNING_SECRET`
+    - `NEBULAUTH_TEST_KEY`
+- Required for dashboard live test:
+    - `NEBULAUTH_DASHBOARD_BEARER_TOKEN`
+- Optional:
+    - `NEBULAUTH_TEST_HWID`

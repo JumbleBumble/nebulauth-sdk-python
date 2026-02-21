@@ -3,8 +3,10 @@ import time
 import unittest
 
 from nebulauth_sdk.client import NebulAuthClient
+from nebulauth_sdk.dashboard import NebulAuthDashboardClient
 
 DEFAULT_BASE_URL = "https://api.nebulauth.com/api/v1"
+DEFAULT_DASHBOARD_BASE_URL = "https://api.nebulauth.com/dashboard"
 
 
 class NebulAuthLiveIntegrationTests(unittest.TestCase):
@@ -13,6 +15,10 @@ class NebulAuthLiveIntegrationTests(unittest.TestCase):
         cls.enabled = os.getenv("NEBULAUTH_LIVE_TEST") == "1"
         cls.base_url = os.getenv("NEBULAUTH_BASE_URL") or DEFAULT_BASE_URL
         cls.bearer_token = os.getenv("NEBULAUTH_BEARER_TOKEN")
+        cls.dashboard_bearer_token = os.getenv("NEBULAUTH_DASHBOARD_BEARER_TOKEN")
+        cls.dashboard_base_url = (
+            os.getenv("NEBULAUTH_DASHBOARD_BASE_URL") or DEFAULT_DASHBOARD_BASE_URL
+        )
         cls.signing_secret = os.getenv("NEBULAUTH_SIGNING_SECRET")
         cls.test_key = os.getenv("NEBULAUTH_TEST_KEY")
         cls.test_hwid = os.getenv("NEBULAUTH_TEST_HWID")
@@ -41,6 +47,14 @@ class NebulAuthLiveIntegrationTests(unittest.TestCase):
             replay_protection="strict",
         )
 
+        if cls.dashboard_bearer_token:
+            cls.dashboard_client = NebulAuthDashboardClient(
+                base_url=cls.dashboard_base_url,
+                auth={"mode": "bearer", "bearer_token": cls.dashboard_bearer_token},
+            )
+        else:
+            cls.dashboard_client = None
+
     def test_live_verify_key(self) -> None:
         response = self.client.verify_key(
             key=self.test_key,
@@ -62,6 +76,17 @@ class NebulAuthLiveIntegrationTests(unittest.TestCase):
         self.assertIsInstance(response.status_code, int)
         self.assertIsInstance(response.data, dict)
         self.assertIn("valid", response.data)
+
+    def test_live_dashboard_me(self) -> None:
+        if self.dashboard_client is None:
+            self.skipTest(
+                "Missing NEBULAUTH_DASHBOARD_BEARER_TOKEN for dashboard live test"
+            )
+
+        response = self.dashboard_client.me()
+
+        self.assertIsInstance(response.status_code, int)
+        self.assertIsInstance(response.data, dict)
 
 
 if __name__ == "__main__":
